@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIMEB · Central de Monitoreo de Equipos Biomédicos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<
+<link rel="stylesheet" href="monitor.css">
+</head>
+<body>
+
+<div id="sm-root">
+
+  <header class="sm-header">
+    <div class="sm-brand">
+      <div class="sm-mark"><span class="sm-pulse-ico">♥</span></div>
+      <div>
+        <h1>SIMEB <span>/ EMS</span></h1>
+        <div class="sm-sub">Central de Monitoreo Biomédico</div>
+      </div>
+    </div>
+    <div class="sm-kpis">
+      <div class="sm-kpi"><span class="sm-n" id="sm-kTotal">0</span><span class="sm-l">Equipos</span></div>
+      <div class="sm-kpi sm-online"><span class="sm-n" id="sm-kOnline">0</span><span class="sm-l">En línea</span></div>
+      <div class="sm-kpi sm-alarm"><span class="sm-n" id="sm-kAlarm">0</span><span class="sm-l">En alarma</span></div>
+    </div>
+    <div class="sm-clock"><b id="sm-clkTime">--:--</b><span id="sm-clkDate">--</span></div>
+    <div class="sm-session">
+      <span id="sm-sesUsuario">Personal de turno</span>
+      <button class="sm-logout" onclick="Sesion.cerrarSesion()" title="Cerrar sesión">⎋</button>
+    </div>
+    <button class="sm-demo-btn" onclick="Monitor.triggerRandom()">⚡ Simular alarma</button>
+  </header>
+
+  <div class="sm-legend">
+    <span class="sm-dot"><span class="sm-b sm-ok"></span> Normal</span>
+    <span class="sm-dot"><span class="sm-b sm-warn"></span> Advertencia</span>
+    <span class="sm-dot"><span class="sm-b sm-crit"></span> Crítica</span>
+    <span class="sm-dot"><span class="sm-b sm-off"></span> Sin conexión</span>
+    <span class="sm-hint">Selecciona una cama para ver el protocolo de atención →</span>
+  </div>
+
+  <main class="sm-main">
+    <div class="sm-grid" id="sm-grid"></div>
+  </main>
+
+  <!-- MODAL: protocolo -->
+  <div class="sm-overlay" id="ovProto">
+    <div class="sm-modal">
+      <div class="sm-mhead">
+        <div class="sm-sev" id="sm-pSev">!</div>
+        <div>
+          <div class="sm-t1" id="sm-pBed">Cama --</div>
+          <div class="sm-t2" id="sm-pAlarm">--</div>
+          <div class="sm-t3" id="sm-pDevice">--</div>
+        </div>
+        <button class="sm-x" onclick="Monitor.closeAll()">✕</button>
+      </div>
+      <div class="sm-mbody">
+        <p class="sm-kv"><b>Contexto:</b> <span id="sm-pContexto">--</span></p>
+        <p class="sm-kv"><b>Síntoma:</b> <span id="sm-pSintoma">--</span></p>
+
+        <p class="sm-kv sm-kvtitle"><b>Posibles causas:</b></p>
+        <ul class="sm-causas" id="sm-pCausas"></ul>
+
+        <p class="sm-kv sm-kvtitle"><b>Diagnóstico real:</b></p>
+        <p class="sm-diag" id="sm-pDiagnostico">👉 --</p>
+
+        <p class="sm-kv sm-kvtitle"><b>Solución:</b></p>
+        <ul class="sm-causas" id="sm-pSteps"></ul>
+
+        <p class="sm-kv sm-kvtitle"><b>Lección clave:</b></p>
+        <blockquote class="sm-note" id="sm-pLeccion"></blockquote>
+
+        <div class="sm-actions">
+          <button class="sm-btn sm-resolve" onclick="Monitor.resolveAlarm()">Alarma resuelta</button>
+          <button class="sm-btn sm-escalate" onclick="Monitor.openSchedule()">No se resuelve · Escalar a Biomédica</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="sm-overlay" id="ovSched">
+    <div class="sm-modal">
+      <div class="sm-mhead">
+        <div class="sm-sev sm-warn">⚙</div>
+        <div>
+          <div class="sm-t1">Soporte biomédico</div>
+          <div class="sm-t2">Agendar servicio técnico</div>
+          <div class="sm-t3" id="sm-sCtx">--</div>
+        </div>
+        <button class="sm-x" onclick="Monitor.closeAll()">✕</button>
+      </div>
+      <div class="sm-mbody" id="sm-schedBody">
+        <div class="sm-field">
+          <label>Prioridad</label>
+          <div class="sm-prio">
+            <label><input type="radio" name="prio" value="Alta" checked><span>🔴 Alta</span></label>
+            <label><input type="radio" name="prio" value="Media"><span>🟡 Media</span></label>
+            <label><input type="radio" name="prio" value="Baja"><span>🟢 Baja</span></label>
+          </div>
+        </div>
+        <div class="sm-field">
+          <label>Técnico asignado</label>
+          <select id="sm-sTech">
+            <option>Asignación automática (turno actual)</option>
+            <option>Luis Terraza · Biomédica</option>
+            <option>Loren Chacon · Biomédica</option>
+            <option>Jessica Rodriguez · Biomédica</option>
+          </select>
+        </div>
+        <div class="sm-field">
+          <label>Descripción para el técnico</label>
+          <textarea id="sm-sDesc" placeholder="Pasos ya realizados por enfermería y observaciones..."></textarea>
+        </div>
+        <div class="sm-note"><b>Nota:</b> el ticket incluye el historial del protocolo aplicado por enfermería, evitando repetir verificaciones básicas.</div>
+        <div class="sm-actions">
+          <button class="sm-btn sm-escalate" style="flex:.6" onclick="Monitor.backToProto()">← Volver</button>
+          <button class="sm-btn sm-resolve" style="background:var(--sm-accent);color:#04101f" onclick="Monitor.confirmSchedule()">Generar ticket</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sm-toast" id="sm-toast"><span class="sm-ic">✓</span><span id="sm-toastMsg"></span></div>
+
+</div><!-- /#sm-root -->
+
+<script src="tickets.js"></script>
+<script src="monitor.js"></script>
+<script>
+  
+  Monitor.init();
+</script>
+</body>
+</html>
