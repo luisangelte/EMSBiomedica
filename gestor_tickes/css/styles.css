@@ -1,0 +1,537 @@
+/* --- RESET Y VARIABLES --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #0b0f19;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.app-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- ENCABEZADO --- */
+.header {
+    background-color: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+    background: #1e293b;
+    padding: 8px;
+    border-radius: 8px;
+}
+
+.brand h1 {
+    font-size: 1.2rem;
+    color: #f8fafc;
+}
+
+.brand h1 span {
+    color: #3b82f6;
+}
+
+.subtitle {
+    font-size: 0.75rem;
+    color: #64748b;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.clock-box {
+    background: #000;
+    color: #10b981;
+    font-family: monospace;
+    font-size: 1.2rem;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #059669;
+}
+
+/* --- MÉTRICAS --- */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.metric-card {
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.metric-title {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #3b82f6;
+}
+
+.metric-card.critical .metric-value { color: #f59e0b; }
+.metric-card.resolved .metric-value { color: #10b981; }
+
+/* --- CONTENIDO / TABLA --- */
+.content-card {
+    background: #111827;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.table-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.table-header-flex h2 {
+    font-size: 1.1rem;
+    color: #f8fafc;
+}
+
+.section-desc {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.tab-navigation {
+    display: flex;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 4px;
+    border-radius: 8px;
+    gap: 5px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: #8a99ad;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.tab-btn.active {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.tab-btn:hover:not(.active) {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.tickets-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.tickets-table th {
+    background: #1e293b;
+    color: #94a3b8;
+    padding: 12px 16px;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.tickets-table td {
+    padding: 16px;
+    border-bottom: 1px solid #1e293b;
+    vertical-align: middle;
+}
+
+.tickets-table tbody tr {
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.tickets-table tbody tr:hover {
+    background: rgba(37, 99, 235, 0.1) !important;
+}
+
+/* BADGES DE ESTADO Y ALARMAS */
+.badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-equipo { background: #1e293b; color: #cbd5e1; }
+.badge-alarma-critica { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+.badge-alarma-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid #f59e0b; }
+.badge-alarma-off { background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid #64748b; }
+
+.badge-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.badge-proceso { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+.badge-pendiente { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+
+.cama-title { font-weight: bold; display: block; color: #f8fafc; }
+.area-text { color: #64748b; font-size: 0.8rem; }
+.desc-protocolo { color: #94a3b8; }
+.text-ok { color: #34d399; font-weight: 600; }
+
+.btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.btn-solucionar { background: #2563eb; color: #fff; }
+.btn-solucionar:hover { background: #1d4ed8; }
+
+.ticket-clickable-id { color: #3b82f6; }
+
+/* MODAL */
+.modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-backdrop.open { display: flex; }
+
+.modal-content {
+    background: #111827;
+    border: 1px solid #1f293d;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    color: #f3f4f6;
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #1f2937;
+    border-bottom: 1px solid #374151;
+}
+
+.close-btn { background: none; border: none; color: #9ca3af; font-size: 1.5rem; cursor: pointer; }
+
+.modal-body {
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    font-size: 0.85rem;
+    background: #1f293d;
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.modal-divider { border: 0; height: 1px; background: #374151; }
+
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+
+.custom-select, textarea {
+    background: #1f293d;
+    border: 1px solid #374151;
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: inherit;
+}
+
+textarea { resize: vertical; min-height: 60px; }
+
+.comments-list {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    padding: 10px;
+    border-radius: 6px;
+    max-height: 100px;
+    overflow-y: auto;
+}
+
+.modal-footer {
+    padding: 12px 24px;
+    background: #1f2937;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-secondary { background: #4b5563; color: #fff; }
+
+.footer {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-top: 10px;
+}
+/* --- PERFIL DE TÉCNICO EN ENCABEZADO --- */
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #1f293d;
+    padding: 6px 14px 6px 8px;
+    border-radius: 30px;
+    border: 1px solid #374151;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 0.85rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f8fafc;
+    line-height: 1.1;
+}
+
+.user-role {
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+/* ==========================================
+   ADAPTATIVIDAD RESPONSIVE (MÓVILES Y TABLETS)
+   ========================================== */
+
+/* Dispositivos Medianos y Pequeños (Smartphones y Tablets) */
+@media screen and (max-width: 768px) {
+
+    /* 1. Encabezado adaptable */
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+        padding: 16px;
+    }
+
+    .brand {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .header-right {
+        flex-direction: column-reverse; /* El perfil arriba, el reloj abajo */
+        width: 100%;
+        gap: 10px;
+    }
+
+    .user-profile {
+        justify-content: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .clock-box {
+        text-align: center;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* 2. Pestañas y cabecera de la tabla */
+    .table-header-flex {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .tab-navigation {
+        width: 100%;
+        display: flex;
+    }
+
+    .tab-btn {
+        flex: 1; /* Ocupan 50% de ancho cada una */
+        text-align: center;
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+
+    .content-card {
+        padding: 16px;
+    }
+
+    /* 3. Modal adaptado a pantallas pequeñas */
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr; /* Una sola columna para los datos */
+    }
+}
+
+/* Ajustes adicionales para celulares muy angostos (< 480px) */
+@media screen and (max-width: 480px) {
+
+    body {
+        padding: 10px;
+    }
+
+    .brand h1 {
+        font-size: 1.05rem;
+    }
+
+    .subtitle {
+        font-size: 0.65rem;
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+    }
+
+    /* Scroll suave y legible para la tabla */
+    .table-responsive {
+        border-radius: 8px;
+        border: 1px solid #1e293b;
+    }
+
+    .tickets-table th, 
+    .tickets-table td {
+        padding: 10px 8px;
+        font-size: 0.8rem;
+    }
+}
+
+/* ========================================================
+   CONVERSIÓN DE TABLA A TARJETAS (CARDS) EN MÓVILES
+   ======================================================== */
+@media screen and (max-width: 768px) {
+
+    /* Ocultar la cabecera original de la tabla en celulares */
+    .tickets-table thead {
+        display: none;
+    }
+
+    /* Convertir la tabla y sus elementos en bloques */
+    .tickets-table, 
+    .tickets-table tbody, 
+    .tickets-table tr, 
+    .tickets-table td {
+        display: block;
+        width: 100%;
+    }
+
+    /* Cada fila (tr) se convierte en una Tarjeta independiente */
+    .tickets-table tbody tr {
+        background: #1e293b;
+        border: 1px solid #334155;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        padding: 12px;
+    }
+
+    /* Formato de las celdas (td) dentro de la tarjeta */
+    .tickets-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px dashed #334155;
+        text-align: right;
+    }
+
+    /* Eliminar la última línea divisoria dentro de la tarjeta */
+    .tickets-table td:last-child {
+        border-bottom: none;
+        padding-top: 12px;
+        justify-content: flex-end;
+    }
+
+    /* Añadir etiqueta dinámica del nombre del campo a la izquierda */
+    .tickets-table td::before {
+        content: attr(data-label); /* Lee la cabecera */
+        font-weight: 700;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        text-align: left;
+        padding-right: 10px;
+    }
+}
