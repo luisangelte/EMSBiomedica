@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMEB / EMS - Administración General</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Barra Lateral -->
+        <aside class="sidebar">
+            <h2>SIMEB Admin</h2>
+            <div class="profile-info">Panel de Gestión</div>
+            <nav>
+                <button class="nav-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+                <button class="nav-btn" onclick="switchTab('usuarios')">👥 Usuarios y Roles</button>
+                <button class="nav-btn" onclick="switchTab('equipos')">🩺 Equipos Médicos</button>
+                <a href="../RolEnfermero/monitor.html" class="nav-btn external">📺 Volver a Central</a>
+            </nav>
+        </aside>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            
+            <!-- PESTAÑA 1: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-content active">
+                <h1>Dashboard Institucional</h1>
+                <div class="kpi-grid">
+                    <div class="kpi-card"><h3>Monitores Activos</h3><p id="kpi-online">--</p></div>
+                    <div class="kpi-card danger"><h3>Alarmas Críticas</h3><p id="kpi-alarmas">--</p></div>
+                    <div class="kpi-card warning"><h3>Tickets Pendientes</h3><p id="kpi-tickets">--</p></div>
+                </div>
+                <div class="chart-box">
+                    <h3>Análisis Operativo Biomédico</h3>
+                    <p>Filtrado inteligente de falsas alarmas operando con éxito.</p>
+                </div>
+            </section>
+
+            <!-- PESTAÑA 2: CONTROL DE USUARIOS Y ROLES -->
+            <section id="tab-usuarios" class="tab-content">
+                <h1>Gestión de Personal de Salud y Soporte</h1>
+                
+                <!-- Formulario para agregar usuario -->
+                <div class="form-container">
+                    <h3>Registrar Nuevo Integrante</h3>
+                    <form id="form-usuario" onsubmit="agregarNuevoUsuario(event)">
+                        <input type="text" id="usr-nombre" placeholder="Nombre completo" required>
+                        <select id="usr-rol" required>
+                            <option value="" disabled selected>Selecciona un Rol</option>
+                            <option value="Enfermero">Enfermero (Monitoreo Clínico)</option>
+                            <option value="Admin">Admin (Control Total)</option>
+                            <option value="Técnico">Técnico (Mantenimiento Biomédico)</option>
+                        </select>
+                        <button type="submit" class="btn-primary">Asignar Acceso</button>
+                    </form>
+                </div>
+
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>ID Acceso</th><th>Nombre</th><th>Rol de Sistema</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tabla-usuarios"></tbody>
+                </table>
+            </section>
+
+            <!-- PESTAÑA 3: INVENTARIO EQUIPOS -->
+            <section id="tab-equipos" class="tab-content">
+                <h1>Inventario de Equipos Críticos</h1>
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Código</th><th>Modelo de Monitor</th><th>Número de Serie</th><th>Sala Asignada</th><th>Próxima Calibración</th></tr>
+                    </thead>
+                    <tbody id="tabla-equipos"></tbody>
+                </table>
+            </section>
+
+        </main>
+    </div>
+    <script src="admin.js"></script>
+</body>
+</html>
