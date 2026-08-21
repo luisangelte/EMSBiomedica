@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis Med - Acceso</title>
+    <style>
+        :root { --bg-dark: #090f1d; --card-dark: #121826; --text-main: #f1f5f9; --accent-blue: #00d2ff; --border-color: #242f41; }
+        body { margin: 0; font-family: system-ui, sans-serif; background-color: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-card { background: var(--card-dark); border: 1px solid var(--border-color); padding: 30px; border-radius: 12px; width: 100%; max-width: 360px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); box-sizing: border-box; }
+        h2 { text-align: center; color: var(--accent-blue); margin-top: 0; }
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+        label { font-size: 13px; color: #94a3b8; margin-bottom: 5px; }
+        input, select { background: var(--bg-dark); border: 1px solid var(--border-color); color: white; padding: 11px; border-radius: 6px; font-size: 14px; }
+        button[type="submit"] { width: 100%; background: var(--accent-blue); color: #090f1d; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px; margin-top: 10px; }
+        .toggle-form { text-align: center; font-size: 13px; margin-top: 15px; color: #64748b; cursor: pointer; }
+        @media (max-width: 480px) { body { padding: 15px; } .login-card { max-width: 100%; border: none; background: transparent; box-shadow: none; padding: 10px; } }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2 id="form-title">Ingresar a SIMEB</h2>
+        <form id="auth-form" onsubmit="procesarAutenticacion(event)">
+            <div class="form-group" id="group-nombre" style="display: none;">
+                <label>Nombre Completo</label>
+                <input type="text" id="auth-nombre" placeholder="Ej. Luis Torres">
+            </div>
+            <div class="form-group">
+                <label>Correo Electrónico</label>
+                <input type="email" id="auth-usuario" placeholder="usuario@simeb.com" required>
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" id="auth-clave" placeholder="••••••••" required>
+            </div>
+            <div class="form-group">
+                <label>Selecciona tu Rol Asignado</label>
+                <select id="auth-rol" required>
+                    <option value="" disabled selected>Escoge tu rol</option>
+                    <option value="Enfermero">Enfermero (Central de Monitoreo)</option>
+                    <option value="Técnico">Técnico (Soporte y Tickets)</option>
+                    <option value="Admin">Administrador (Dashboard Global)</option>
+                </select>
+            </div>
+            <button type="submit" id="btn-submit">Iniciar Sesión</button>
+            <div class="toggle-form" id="toggle-text" onclick="alternarModoFormulario()">¿No tienes cuenta? Registrate aquí</div>
+        </form>
+    </div>
+    <script>
+        let esModoRegistro = false;
+        function alternarModoFormulario() {
+            esModoRegistro = !esModoRegistro;
+            document.getElementById("form-title").innerText = esModoRegistro ? "Registro de Cuenta" : "Ingresar a SIMEB";
+            document.getElementById("btn-submit").innerText = esModoRegistro ? "Crear Cuenta" : "Iniciar Sesión";
+            document.getElementById("toggle-text").innerText = esModoRegistro ? "¿Ya tienes cuenta? Ingresa aquí" : "¿No tienes cuenta? Registrate aquí";
+            document.getElementById("group-nombre").style.display = esModoRegistro ? "flex" : "none";
+            document.getElementById("auth-nombre").required = esModoRegistro;
+        }
+        async function procesarAutenticacion(e) {
+            e.preventDefault();
+            const usuario = document.getElementById("auth-usuario").value;
+            const clave = document.getElementById("auth-clave").value;
+            const rol = document.getElementById("auth-rol").value;
+            const nombre = document.getElementById("auth-nombre").value;
+            const endpoint = esModoRegistro ? 'registrar' : 'login';
+            let cuerpoReq = esModoRegistro ? { nombre, usuario, clave, rol } : { usuario, clave, rol };
+            try {
+                const respuesta = await fetch(`/api/auth/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(cuerpoReq)
+                });
+                const data = await respuesta.json();
+                if (respuesta.ok) {
+                    if (esModoRegistro) {
+                        alert("Registro enviado. Espera la aprobación del Administrador.");
+                        alternarModoFormulario();
+                    } else {
+                        localStorage.setItem("userRol", data.rol);
+                        localStorage.setItem("userNombre", data.nombre || "Personal de turno");
+                        if (data.rol === "Admin") window.location.href = "paneladmin/admin.html";
+                        else if (data.rol === "Enfermero") window.location.href = "RolEnfermero/monitor.html";
+                        else if (data.rol === "Técnico") window.location.href = "gestor_tickes/index.html";
+                    }
+                } else { alert(data.mensaje); }
+            } catch (err) { alert("No se pudo conectar con el servidor central."); }
+        }
+    </script>
+</body>
+</html>

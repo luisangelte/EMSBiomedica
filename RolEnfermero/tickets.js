@@ -1,109 +1,82 @@
-/* ============================================================
-   TICKETS.JS — Módulo COMPARTIDO entre paneles
-   ============================================================
-   Este archivo se debe copiar TAL CUAL en la carpeta de tu
-   compañera también (el panel del técnico lo necesita para leer
-   los mismos tickets que tú generas aquí).
-
-   ¿Qué hace? Guarda los tickets en localStorage, que es una
-   "cajita" de almacenamiento del propio navegador. Así, cuando
-   tú generas un ticket en monitor.html, tu compañera puede
-   leerlo desde tecnico.html — siempre que se abran en el MISMO
-   navegador y computador (perfecto para la demo en clase).
-
-   Cuando el backend esté listo, solo hay que cambiar las 4
-   funciones de abajo (crear/listar/actualizarEstado/obtener)
-   para que en vez de usar localStorage hagan fetch(...) al
-   servidor. El resto del código (monitor.js, tecnico.js) no
-   tiene que cambiar nada, porque siempre las llama a ELLAS,
-   nunca toca localStorage directamente.
-   ============================================================ */
-const Tickets = (function(){
-
-  const KEY = "sm_tickets"; // nombre de la "cajita" en localStorage
-
-  function leerTodos(){
-    try{
-      const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){
-      console.error("Error leyendo tickets:", e);
-      return [];
+// Verifica que haya una sesión iniciada (el login la deja en localStorage
+// bajo las claves "userRol" / "userNombre"). Si no hay sesión, expulsa
+// al login.
+(function verificarAccesoSeguro() {
+    const rolGuardado = localStorage.getItem("userRol");
+    if (!rolGuardado) {
+        alert("Acceso denegado. Por favor, inicia sesión.");
+        window.location.href = "../index.html";
     }
-  }
-
-  function guardarTodos(lista){
-    localStorage.setItem(KEY, JSON.stringify(lista));
-  }
-
-  /**
-   * Crea un nuevo ticket y lo guarda.
-   * datos = { cama, sala, equipo, alarma, contexto, sintoma,
-   *           causas, diagnostico, solucion, leccion,
-   *           prioridad, tecnicoAsignado, descripcion }
-   * Devuelve el ticket ya creado (con id, código y estado).
-   */
-  function crear(datos){
-    const lista = leerTodos();
-    const nuevo = Object.assign({}, datos, {
-      id: Date.now(),                          // identificador único simple
-      codigo: "SB-"+String(Date.now()).slice(-5),
-      estado: "pendiente",                      // pendiente | resuelto
-      creado: new Date().toISOString()
-    });
-    lista.unshift(nuevo); // lo pone de primero (más reciente arriba)
-    guardarTodos(lista);
-    return nuevo;
-  }
-
-  /**
-   * Devuelve la lista de tickets. Si pasas un estado
-   * ("pendiente" o "resuelto"), filtra solo esos.
-   */
-  function listar(estado){
-    const lista = leerTodos();
-    return estado ? lista.filter(t=>t.estado===estado) : lista;
-  }
-
-  /** Busca un ticket por su id. */
-  function obtener(id){
-    return leerTodos().find(t=>t.id===id) || null;
-  }
-
-  /** Cambia el estado de un ticket (ej. cuando el técnico lo cierra). */
-  function actualizarEstado(id, nuevoEstado){
-    const lista = leerTodos();
-    const t = lista.find(t=>t.id===id);
-    if(!t) return null;
-    t.estado = nuevoEstado;
-    t.actualizado = new Date().toISOString();
-    guardarTodos(lista);
-    return t;
-  }
-
-  return { crear, listar, obtener, actualizarEstado };
 })();
 
+/* ============================================================
+   TICKETS.JS — Módulo COMPARTIDO entre paneles (Enfermería ↔ Técnico)
+   ============================================================
+   Ya NO usa localStorage: los tickets viven en el backend
+   (Backend Alertas/servidor.js, endpoints /api/tickets), para que
+   el panel del técnico (gestor_tickes) pueda leer en tiempo real
+   lo que genera enfermería, sin importar si están en la misma
+   máquina/navegador.
+   ============================================================ */
+const Tickets = (function () {
+
+  const API = "/api/tickets";
+
+  /**
+   * Crea un nuevo ticket en el backend.
+   * datos = { cama, sala, equipo, alarma, contexto, sintoma,
+   *           diagnostico, solucion, leccion,
+   *           prioridad, tecnicoAsignado, descripcion }
+   * Devuelve una Promise con el ticket ya creado (id, estado, etc.)
+   */
+  async function crear(datos) {
+    const resp = await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos)
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.success) throw new Error(data.mensaje || "No se pudo crear el ticket.");
+    return data.ticket;
+  }
+
+  /** Lista todos los tickets (opcionalmente filtrados por estado). */
+  async function listar(estado) {
+    const resp = await fetch(API);
+    const lista = await resp.json();
+    return estado ? lista.filter(t => t.estado === estado) : lista;
+  }
+
+  /** Cambia el estado de un ticket y/o agrega un comentario. */
+  async function actualizar(id, cambios) {
+    const resp = await fetch(`${API}/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cambios)
+    });
+    return resp.json();
+  }
+
+  return { crear, listar, actualizar };
+})();
 
 /* ============================================================
-   SESION — mini-helper de rol, mientras el login "de verdad"
-   no está listo. Convención acordada con el equipo:
-     localStorage.sm_rol     -> "enfermero" | "tecnico" | "admin"
-     localStorage.sm_usuario -> nombre para mostrar (opcional)
-   Cuando el login real esté listo, él es quien debe escribir
-   estos dos valores antes de redirigir a cada panel.
+   SESION — helper de rol/usuario, alineado con el login real
+   (index.html), que guarda:
+     localStorage.userRol     -> "Enfermero" | "Técnico" | "Admin"
+     localStorage.userNombre  -> nombre para mostrar
    ============================================================ */
-const Sesion = (function(){
-  function rolActual(){
-    return localStorage.getItem("sm_rol") || "enfermero"; // valor de prueba mientras no hay login
+const Sesion = (function () {
+  function rolActual() {
+    return localStorage.getItem("userRol") || "Enfermero";
   }
-  function usuarioActual(){
-    return localStorage.getItem("sm_usuario") || "Personal de turno";
+  function usuarioActual() {
+    return localStorage.getItem("userNombre") || "Personal de turno";
   }
-  function cerrarSesion(){
-    localStorage.removeItem("sm_rol");
-    localStorage.removeItem("sm_usuario");
-    window.location.href = "login.html";
+  function cerrarSesion() {
+    localStorage.removeItem("userRol");
+    localStorage.removeItem("userNombre");
+    window.location.href = "../index.html";
   }
   return { rolActual, usuarioActual, cerrarSesion };
 })();
