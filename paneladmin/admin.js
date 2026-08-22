@@ -24,6 +24,10 @@ function switchTab(nombre) {
     );
     if (boton) boton.classList.add("active");
 
+    // En celular, el menú se abre encima del contenido; ciérralo al elegir.
+    const nav = document.getElementById("nav-admin");
+    if (nav) nav.classList.remove("open");
+
     if (nombre === "dashboard") cargarDashboard();
     if (nombre === "usuarios") obtenerUsuarios();
     if (nombre === "equipos") obtenerEquipos();
@@ -43,9 +47,46 @@ async function cargarDashboard() {
         if (elOnline) elOnline.textContent = data.camasOnline;
         if (elAlarmas) elAlarmas.textContent = data.camasAlarma;
         if (elTickets) elTickets.textContent = data.ticketsActivos;
+
+        actualizarGraficos(data);
     } catch (err) {
         console.error("Error cargando métricas del dashboard:", err);
     }
+}
+
+// Alimenta el donut de disponibilidad y las barras del panel visual
+// con los datos reales del backend (no son valores decorativos).
+function actualizarGraficos(data) {
+    const total = data.totalCamas || 0;
+    const online = data.camasOnline || 0;
+    const alarma = data.camasAlarma || 0;
+    const tickets = data.ticketsActivos || 0;
+    const pctOnline = total > 0 ? Math.round((online / total) * 100) : 0;
+
+    const donut = document.getElementById("donut-camas");
+    if (donut) {
+        donut.style.setProperty("--pct", pctOnline);
+        donut.setAttribute("data-label", pctOnline + "%");
+    }
+
+    const barOnline = document.getElementById("bar-online");
+    const barOnlineLabel = document.getElementById("bar-online-label");
+    if (barOnline) barOnline.style.width = pctOnline + "%";
+    if (barOnlineLabel) barOnlineLabel.textContent = `${online} / ${total}`;
+
+    // Las barras de alarma y tickets se muestran en proporción a un
+    // techo razonable (el total de camas), solo como referencia visual.
+    const barAlarma = document.getElementById("bar-alarma");
+    const barAlarmaLabel = document.getElementById("bar-alarma-label");
+    const pctAlarma = total > 0 ? Math.min(100, Math.round((alarma / total) * 100)) : 0;
+    if (barAlarma) barAlarma.style.width = pctAlarma + "%";
+    if (barAlarmaLabel) barAlarmaLabel.textContent = alarma;
+
+    const barTickets = document.getElementById("bar-tickets");
+    const barTicketsLabel = document.getElementById("bar-tickets-label");
+    const pctTickets = Math.min(100, tickets * 20); // referencia: 5+ tickets = barra llena
+    if (barTickets) barTickets.style.width = pctTickets + "%";
+    if (barTicketsLabel) barTicketsLabel.textContent = tickets;
 }
 
 // ==========================================

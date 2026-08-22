@@ -11,8 +11,9 @@
         <!-- Barra Lateral -->
         <aside class="sidebar">
             <h2>SIMEB Admin</h2>
-            <div class="profile-info">Panel de Gestión</div>
-            <nav>
+            <button class="menu-toggle" onclick="document.getElementById('nav-admin').classList.toggle('open')">☰</button>
+            <nav id="nav-admin">
+                <div class="profile-info">Panel de Gestión</div>
                 <button class="nav-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
                 <button class="nav-btn" onclick="switchTab('usuarios')">👥 Usuarios y Roles</button>
                 <button class="nav-btn" onclick="switchTab('equipos')">🩺 Equipos Médicos</button>
@@ -22,25 +23,65 @@
 
         <!-- Contenido Principal -->
         <main class="main-content">
-            
+
             <!-- PESTAÑA 1: DASHBOARD -->
             <section id="tab-dashboard" class="tab-content active">
                 <h1>Dashboard Institucional</h1>
                 <div class="kpi-grid">
-                    <div class="kpi-card"><h3>Monitores Activos</h3><p id="kpi-online">--</p></div>
-                    <div class="kpi-card danger"><h3>Alarmas Críticas</h3><p id="kpi-alarmas">--</p></div>
-                    <div class="kpi-card warning"><h3>Tickets Pendientes</h3><p id="kpi-tickets">--</p></div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon">🖥️</div>
+                        <h3>Monitores Activos</h3>
+                        <p id="kpi-online">--</p>
+                    </div>
+                    <div class="kpi-card danger">
+                        <div class="kpi-icon">🚨</div>
+                        <h3>Alarmas Críticas</h3>
+                        <p id="kpi-alarmas">--</p>
+                    </div>
+                    <div class="kpi-card warning">
+                        <div class="kpi-icon">🎫</div>
+                        <h3>Tickets Pendientes</h3>
+                        <p id="kpi-tickets">--</p>
+                    </div>
                 </div>
-                <div class="chart-box">
-                    <h3>Análisis Operativo Biomédico</h3>
-                    <p>Filtrado inteligente de falsas alarmas operando con éxito.</p>
+
+                <div class="chart-row">
+                    <div class="chart-box">
+                        <h3>Disponibilidad de camas</h3>
+                        <div class="chart-sub">Equipos en línea vs. total registrado</div>
+                        <div class="donut-wrap">
+                            <div class="donut" id="donut-camas" style="--pct:0" data-label="0%"></div>
+                            <div class="donut-legend">
+                                <span><i class="dot ok"></i>En línea</span>
+                                <span><i class="dot off"></i>Fuera de línea</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chart-box">
+                        <h3>Análisis Operativo Biomédico</h3>
+                        <div class="chart-sub">Filtrado inteligente de falsas alarmas del Caso 2 (electrodo ECG suelto)</div>
+                        <div class="bars-list">
+                            <div class="bar-item">
+                                <div class="bar-label"><span>Camas en línea</span><b id="bar-online-label">0 / 0</b></div>
+                                <div class="bar-track"><div class="bar-fill" id="bar-online"></div></div>
+                            </div>
+                            <div class="bar-item">
+                                <div class="bar-label"><span>Camas con alarma activa</span><b id="bar-alarma-label">0</b></div>
+                                <div class="bar-track"><div class="bar-fill danger" id="bar-alarma"></div></div>
+                            </div>
+                            <div class="bar-item">
+                                <div class="bar-label"><span>Tickets pendientes</span><b id="bar-tickets-label">0</b></div>
+                                <div class="bar-track"><div class="bar-fill warning" id="bar-tickets"></div></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
             <!-- PESTAÑA 2: CONTROL DE USUARIOS Y ROLES -->
             <section id="tab-usuarios" class="tab-content">
                 <h1>Gestión de Personal de Salud y Soporte</h1>
-                
+
                 <!-- Formulario para agregar usuario -->
                 <div class="form-container">
                     <h3>Registrar Nuevo Integrante</h3>
@@ -56,23 +97,27 @@
                     </form>
                 </div>
 
-                <table class="admin-table">
-                    <thead>
-                        <tr><th>ID Acceso</th><th>Nombre</th><th>Rol de Sistema</th><th>Estado</th><th>Acciones</th></tr>
-                    </thead>
-                    <tbody id="tabla-usuarios"></tbody>
-                </table>
+                <div class="table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>ID Acceso</th><th>Nombre</th><th>Rol de Sistema</th><th>Estado</th><th>Acciones</th></tr>
+                        </thead>
+                        <tbody id="tabla-usuarios"></tbody>
+                    </table>
+                </div>
             </section>
 
             <!-- PESTAÑA 3: INVENTARIO EQUIPOS -->
             <section id="tab-equipos" class="tab-content">
                 <h1>Inventario de Equipos Críticos</h1>
-                <table class="admin-table">
-                    <thead>
-                        <tr><th>Código</th><th>Modelo de Monitor</th><th>Número de Serie</th><th>Sala Asignada</th><th>Próxima Calibración</th></tr>
-                    </thead>
-                    <tbody id="tabla-equipos"></tbody>
-                </table>
+                <div class="table-wrap">
+                    <table class="admin-table">
+                        <thead>
+                            <tr><th>Código</th><th>Modelo de Monitor</th><th>Número de Serie</th><th>Sala Asignada</th><th>Próxima Calibración</th></tr>
+                        </thead>
+                        <tbody id="tabla-equipos"></tbody>
+                    </table>
+                </div>
             </section>
 
         </main>
