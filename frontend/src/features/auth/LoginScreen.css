@@ -1,0 +1,78 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #0f172a;
+  color: #f8fafc;
+}
+
+.login-card {
+  background-color: #1e293b;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-card h2 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: #38bdf8;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.form-group input,
+.form-group select {
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background-color: #0f172a;
+  color: #ffffff;
+  outline: none;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #38bdf8;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  background-color: #0284c7;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-submit:hover {
+  background-color: #0369a1;
+}
+
+.btn-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.error-message {
+  color: #fca5a5;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}

@@ -1,0 +1,76 @@
+:root {
+  --bg-dark: #090f1d;
+  --card-dark: #121826;
+  --text-main: #f1f5f9;
+  --accent-blue: #3b82f6;
+  --border-color: #1e293b;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  background: var(--card-dark);
+  border: 1px solid var(--border-color);
+  padding: 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+.login-card h2 {
+  text-align: center;
+  color: var(--accent-blue);
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 5px;
+}
+
+.form-group input {
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: var(--accent-blue);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent-blue);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
