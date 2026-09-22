@@ -47,7 +47,7 @@ export const LoginScreen = () => {
     <div className="login-container">
       <div className="login-card">
         <h2 id="form-title">Ingresar a SIMEB</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
             <label htmlFor="username">Correo Electrónico</label>
             <input
@@ -84,9 +84,9 @@ export const LoginScreen = () => {
               required
             >
               <option value="" disabled>Escoge tu rol</option>
-              <option value="Enfermero">Enfermero (Central de Monitoreo)</option>
-              <option value="Técnico">Técnico (Soporte y Tickets)</option>
-              <option value="Admin">Administrador (Dashboard Global)</option>
+              <option value="Enfermero">Enfermero</option>
+              <option value="Técnico">Técnico</option>
+              <option value="Admin">Administrador</option>
             </select>
           </div>
 
@@ -95,6 +95,10 @@ export const LoginScreen = () => {
           <button type="submit" className="btn-submit" disabled={loading}>
             {loading ? 'Ingresando...' : 'Iniciar Sesión'}
           </button>
+
+          <div className="register-text">
+            ¿No tienes cuenta? <span>Regístrate aquí</span>
+          </div>
         </form>
       </div>
     </div>
