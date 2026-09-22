@@ -13,7 +13,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
 }
 
 .login-card h2 {
@@ -31,9 +31,11 @@
 .form-group label {
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
+  color: #cbd5e1;
 }
 
-.form-group input {
+.form-group input,
+.form-group select {
   padding: 0.75rem;
   border-radius: 6px;
   border: 1px solid #334155;
@@ -42,7 +44,8 @@
   outline: none;
 }
 
-.form-group input:focus {
+.form-group input:focus,
+.form-group select:focus {
   border-color: #38bdf8;
 }
 
@@ -61,4 +64,15 @@
 
 .btn-submit:hover {
   background-color: #0369a1;
+}
+
+.btn-submit:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.error-message {
+  color: #fca5a5;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
 }
