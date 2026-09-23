@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIMEB / EMS - Gestor Técnico Biomédico</title>
+    <title>SIMEB - Gestor Técnico Biomédico</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -14,7 +17,7 @@
     <div class="brand">
         <div class="logo-icon">🛠️</div>
         <div>
-            <h1>SIMEB <span>/ EMS</span></h1>
+            <h1>SIMEB</h1>
             <p class="subtitle">GESTOR DE MANTENIMIENTO TÉCNICO BIOMÉDICO</p>
         </div>
     </div>
@@ -26,11 +29,11 @@
         <!-- PERFIL DEL TÉCNICO -->
         <div class="user-profile">
             <div class="user-avatar">
-                <span>TB</span>
+                <span id="user-avatar-initials">TB</span>
             </div>
             <div class="user-info">
-                <span class="user-name">Ing. Alex Rivera</span>
-                <span class="user-role">Técnico Biomédico · Turno Día</span>
+                <span class="user-name">Personal técnico</span>
+                <span class="user-role">Técnico</span>
             </div>
             <button onclick="localStorage.removeItem('userRol'); localStorage.removeItem('userNombre'); window.location.href='../index.html';" title="Cerrar sesión" style="background:none;border:none;color:#94a3b8;font-size:18px;cursor:pointer;margin-left:10px;">⎋</button>
         </div>
@@ -93,7 +96,7 @@
         </main>
 
         <footer class="footer">
-            <p>© 2026 SIMEB / EMS - Asistente Inteligente para Monitoreo de Signos Vitales y Gestión Biomédica</p>
+            <p>© 2026 SIMEB - Asistente Inteligente para Monitoreo de Signos Vitales y Gestión Biomédica</p>
         </footer>
     </div>
 

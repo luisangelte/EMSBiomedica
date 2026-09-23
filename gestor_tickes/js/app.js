@@ -12,6 +12,7 @@ const API = "/api/tickets";
 let pestanaActual = 'activos'; // 'activos' o 'historial'
 let ticketSeleccionadoId = null;
 let ticketsCache = [];
+let cargandoTickets = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     inicializarReloj();
@@ -34,20 +35,53 @@ function inicializarReloj() {
 
 function mostrarUsuario() {
     const nombre = localStorage.getItem("userNombre") || "Personal técnico";
+    const rol = localStorage.getItem("userRol") || "Técnico";
     const elNombre = document.querySelector(".user-name");
+    const elRol = document.querySelector(".user-role");
+    const elAvatar = document.getElementById("user-avatar-initials");
     if (elNombre) elNombre.textContent = nombre;
+    if (elRol) elRol.textContent = `${rol} · Turno actual`;
+    if (elAvatar) elAvatar.textContent = nombre.split(/\s+/).map(parte => parte[0]).join("").slice(0, 2).toUpperCase();
 }
 
 // 1. Cargar tickets desde el backend (compartido con enfermería)
 async function cargarTickets() {
+    if (cargandoTickets) return;
+    cargandoTickets = true;
     try {
         const respuesta = await fetch(API);
-        ticketsCache = await respuesta.json();
+        const datos = await respuesta.json();
+        if (!respuesta.ok || !Array.isArray(datos)) throw new Error('Respuesta inválida del servidor.');
+        ticketsCache = datos;
         actualizarMetricas(ticketsCache);
         renderizarTabla(filtrarPorPestana(ticketsCache));
+        mostrarEstadoConexion(true);
     } catch (error) {
         console.error("Error cargando tickets:", error);
+        mostrarEstadoConexion(false);
+    } finally {
+        cargandoTickets = false;
     }
+}
+
+function mostrarEstadoConexion(conectado) {
+    let estado = document.getElementById('estado-api');
+    if (!estado) {
+        estado = document.createElement('p');
+        estado.id = 'estado-api';
+        estado.setAttribute('role', 'status');
+        estado.style.cssText = 'margin:0 0 12px;color:#64748b;font-size:.8rem;';
+        const tabla = document.querySelector('.table-responsive');
+        if (tabla) tabla.parentNode.insertBefore(estado, tabla);
+    }
+    estado.textContent = conectado ? '● Actualizado en tiempo real' : '● Sin conexión con el servidor. Reintentando...';
+    estado.style.color = conectado ? '#34d399' : '#fbbf24';
+}
+
+function textoSeguro(valor, alternativo = '') {
+    const contenedor = document.createElement('div');
+    contenedor.textContent = valor ?? alternativo;
+    return contenedor.innerHTML;
 }
 
 function filtrarPorPestana(tickets) {
@@ -67,21 +101,22 @@ function renderizarTabla(tickets) {
     }
 
     tbody.innerHTML = tickets.map(ticket => {
-        const camaTexto = ticket.cama ? `Cama ${ticket.cama}` : 'Cama N/A';
-        const estadoTexto = ticket.estado || 'Pendiente';
+        const camaTexto = ticket.cama ? `Cama ${textoSeguro(ticket.cama)}` : 'Cama N/A';
+        const estadoTexto = textoSeguro(ticket.estado || 'Pendiente');
         const badgeEstado = estadoTexto === 'Resuelto' ? 'badge-ok' : (estadoTexto === 'En Atención' ? 'badge-proceso' : 'badge-pendiente');
-        const equipoTexto = ticket.equipo || 'Equipo Biomédico';
-        const fallaTexto = ticket.alarma || ticket.sintoma || 'Falla reportada';
-        const protocoloTexto = ticket.diagnostico || 'N/A';
-        const areaTexto = ticket.sala || ticket.contexto || '';
+        const equipoTexto = textoSeguro(ticket.equipo || 'Equipo Biomédico');
+        const fallaTexto = textoSeguro(ticket.alarma || ticket.sintoma || 'Falla reportada');
+        const protocoloTexto = textoSeguro(ticket.diagnostico || 'N/A');
+        const areaTexto = textoSeguro(ticket.sala || ticket.contexto || '');
+        const idSeguro = encodeURIComponent(ticket.id);
 
         const accion = estadoTexto === 'Resuelto'
-            ? `<span style="color:#4ad66d">✓ Ver detalle</span>`
-            : `<button class="btn btn-solucionar" onclick="abrirModalTicket('${ticket.id}')">Gestionar</button>`;
+            ? `<button class="btn btn-solucionar" onclick="abrirModalTicket('${idSeguro}')">Ver detalle</button>`
+            : `<button class="btn btn-solucionar" onclick="abrirModalTicket('${idSeguro}')">Gestionar</button>`;
 
         return `
             <tr>
-                <td data-label="TICKET"><span class="ticket-clickable-id" style="cursor:pointer;" onclick="abrirModalTicket('${ticket.id}')">#${ticket.id}</span></td>
+                <td data-label="TICKET"><button class="ticket-clickable-id" type="button" onclick="abrirModalTicket('${idSeguro}')">#${textoSeguro(ticket.id)}</button></td>
                 <td data-label="UBICACIÓN / CAMA">
                     <span class="cama-title">${camaTexto}</span>
                     ${areaTexto ? `<br><small style="color:#64748b;">${areaTexto}</small>` : ''}
@@ -106,6 +141,7 @@ function cambiarPestana(pestana) {
 
 // 4. Abrir modal de detalle/gestión
 function abrirModalTicket(id) {
+    id = decodeURIComponent(id);
     ticketSeleccionadoId = id;
     const ticket = ticketsCache.find(t => t.id === id);
     if (!ticket) return;
@@ -146,17 +182,29 @@ async function guardarCambiosModal() {
     const nuevoComentario = document.getElementById('modal-comentario').value.trim();
 
     try {
-        await fetch(`${API}/${ticketSeleccionadoId}`, {
+        const respuesta = await fetch(`${API}/${encodeURIComponent(ticketSeleccionadoId)}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ estado: nuevoEstado, comentario: nuevoComentario })
         });
+        const data = await respuesta.json();
+        if (!respuesta.ok || !data.success) throw new Error(data.mensaje || 'No se pudieron guardar los cambios.');
         cerrarModal();
         cargarTickets();
     } catch (err) {
         console.error("Error guardando cambios del ticket:", err);
+        alert(err.message || 'No se pudieron guardar los cambios.');
     }
 }
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') cerrarModal();
+});
+
+document.addEventListener('click', event => {
+    const modal = document.getElementById('modal-ticket');
+    if (modal && event.target === modal) cerrarModal();
+});
 
 function actualizarMetricas(tickets) {
     const elTotal = document.getElementById('num-total');

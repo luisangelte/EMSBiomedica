@@ -19,6 +19,15 @@
   --sm-accent:#5B8DEF;
 }
 
+html, body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden;
+  background: var(--sm-bg);
+}
+
 /* Contenedor raíz del módulo */
 
 #sm-root{
@@ -26,7 +35,7 @@
     radial-gradient(1200px 600px at 80% -10%, rgba(91,141,239,.08), transparent 60%),
     var(--sm-bg);
   color:var(--sm-text);
-  font-family:'Inter',system-ui,sans-serif;
+  font-family:'Space Grotesk',system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
   min-height:100vh;
 }
@@ -276,3 +285,39 @@
   #sm-root .sm-legend .sm-hint{display:none}
 }
 @media(prefers-reduced-motion:reduce){#sm-root *{animation:none!important}}
+
+/* Escala y tipografía compartidas con los demás módulos. */
+#sm-root { font-size: 90%; }
+#sm-root .sm-brand h1, #sm-root .sm-bed .sm-bedno, #sm-root .sm-mhead .sm-t2 { font-family: 'Space Grotesk', sans-serif; }
+#sm-root .sm-kpi .sm-n, #sm-root .sm-clock, #sm-root .sm-vital .sm-vv, #sm-root .sm-device { font-family: 'IBM Plex Mono', monospace; }
+#sm-root .sm-brand h1 { font-size: 18px; }
+#sm-root .sm-brand .sm-sub { font-size: 10.35px; }
+#sm-root .sm-kpi .sm-n { font-size: 19.8px; }
+#sm-root .sm-kpi .sm-l { font-size: 9.45px; }
+#sm-root .sm-clock { font-size: 12.6px; }
+#sm-root .sm-clock b { font-size: 15.3px; }
+#sm-root .sm-demo-btn, #sm-root .sm-btn { font-size: 11.7px; }
+#sm-root .sm-legend, #sm-root .sm-bed .sm-patient { font-size: 11.25px; }
+#sm-root .sm-bed .sm-room { font-size: 10.8px; }
+#sm-root .sm-bed .sm-device { font-size: 9.45px; }
+#sm-root .sm-vital .sm-vl { font-size: 8.55px; }
+#sm-root .sm-vital .sm-vv { font-size: 18.9px; }
+#sm-root .sm-vital .sm-vu { font-size: 9px; }
+#sm-root .sm-bed .sm-alarmtag { font-size: 10.35px; }
+
+/* Paleta clínica compartida por toda la aplicación. */
+:root { --ui-bg: #0b0f14; --ui-panel: #151c26; --ui-panel-2: #1b2430; --ui-line: #232f3e; --ui-text: #e6ecf3; --ui-muted: #7e8b9c; --ui-accent: #5b8def; --ui-ok: #34d399; --ui-warn: #fbbf24; --ui-danger: #ff3b5c; }
+#sm-root { background: radial-gradient(1200px 600px at 80% -10%, rgba(91,141,239,.08), transparent 60%), var(--ui-bg); color: var(--ui-text); }
+#sm-root { width: 100%; max-width: 100%; overflow-x: hidden; }
+#sm-root .sm-header, #sm-root .sm-kpi, #sm-root .sm-clock, #sm-root .sm-session, #sm-root .sm-note, #sm-root .sm-prio label { background-color: var(--ui-panel); border-color: var(--ui-line); }
+#sm-root .sm-bed, #sm-root .sm-modal { background: linear-gradient(180deg, var(--ui-panel), var(--ui-bg)); border-color: var(--ui-line); }
+#sm-root .sm-brand h1, #sm-root .sm-bed .sm-bedno, #sm-root .sm-mhead .sm-t2 { color: var(--ui-text); }
+#sm-root .sm-brand h1 span, #sm-root .sm-bed .sm-room, #sm-root .sm-bed .sm-patient, #sm-root .sm-bed .sm-device, #sm-root .sm-legend, #sm-root .sm-t3 { color: var(--ui-muted); }
+#sm-root .sm-demo-btn { background: var(--ui-warn); color: var(--ui-bg); }
+
+@media(max-width:980px){
+  #sm-root .sm-header{flex-wrap:wrap;gap:12px;padding:14px 18px}
+  #sm-root .sm-kpis{margin-left:0;order:3;width:100%}
+  #sm-root .sm-kpi{flex:1;min-width:0}
+  #sm-root .sm-session{margin-left:auto}
+}

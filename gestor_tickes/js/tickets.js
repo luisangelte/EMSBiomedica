@@ -18,105 +18,53 @@
    tiene que cambiar nada, porque siempre las llama a ELLAS,
    nunca toca localStorage directamente.
    ============================================================ */
-const Tickets = (function(){
+/* Cliente compartido del API de tickets. */
+const Tickets = (function () {
+  const API = "/api/tickets";
 
-  const KEY = 'simeb_tickets'; // nombre de la "cajita" en localStorage
-
-  function leerTodos(){
-    try{
-      const raw = localStorage.getItem(KEY);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){
-      console.error("Error leyendo tickets:", e);
-      return [];
+  async function request(url, options) {
+    const response = await fetch(url, options);
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.success === false) {
+      throw new Error(data.mensaje || "No se pudo completar la operación.");
     }
+    return data;
   }
 
-  function guardarTodos(lista){
-    localStorage.setItem(KEY, JSON.stringify(lista));
+  function crear(datos) {
+    return request(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos)
+    }).then(data => data.ticket);
   }
 
-  /**
-   * Crea un nuevo ticket y lo guarda.
-   * datos = { cama, sala, equipo, alarma, contexto, sintoma,
-   *           causas, diagnostico, solucion, leccion,
-   *           prioridad, tecnicoAsignado, descripcion }
-   * Devuelve el ticket ya creado (con id, código y estado).
-   */
-  function crear(datos){
-    const lista = leerTodos();
-    
-    // Generar código de ticket fácil de leer (ej: TK-384)
-    const randomId = Math.floor(100 + Math.random() * 900);
-    const idTicket = "TK-" + randomId;
-
-    const nuevo = {
-        id: idTicket,
-        codigo: datos.codigo || ("SB-" + String(Date.now()).slice(-5)),
-        cama: datos.cama || datos.sala || 'Cama Registrada',
-        area: datos.area || datos.contexto || 'UCI / General',
-        equipo: datos.equipo || 'Equipo Biomédico',
-        falla: datos.sintoma || datos.falla || 'Falla reportada por enfermería',
-        fallaTipo: datos.prioridad || 'critica',
-        protocolo: datos.diagnostico || 'Protocolo de enfermería aplicado sin resolver',
-        estado: 'Pendiente', // Estado inicial obligatorio
-        comentarios: [],
-        fecha: new Date().toISOString()
-    };
-
-    lista.unshift(nuevo); // Agregar al inicio de la lista
-    guardarTodos(lista);
-    return nuevo;
-}
-
-  /**
-   * Devuelve la lista de tickets. Si pasas un estado
-   * ("pendiente" o "resuelto"), filtra solo esos.
-   */
-  function listar(estado){
-    const lista = leerTodos();
-    return estado ? lista.filter(t=>t.estado===estado) : lista;
+  function listar(estado) {
+    return request(API).then(lista => estado ? lista.filter(t => t.estado === estado) : lista);
   }
 
-  /** Busca un ticket por su id. */
-  function obtener(id){
-    return leerTodos().find(t=>t.id===id) || null;
+  function obtener(id) {
+    return listar().then(lista => lista.find(ticket => ticket.id === id) || null);
   }
 
-  /** Cambia el estado de un ticket (ej. cuando el técnico lo cierra). */
-  function actualizarEstado(id, nuevoEstado){
-    const lista = leerTodos();
-    const t = lista.find(t=>t.id===id);
-    if(!t) return null;
-    t.estado = nuevoEstado;
-    t.actualizado = new Date().toISOString();
-    guardarTodos(lista);
-    return t;
+  function actualizar(id, cambios) {
+    return request(`${API}/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(cambios)
+    });
   }
 
-  return { crear, listar, obtener, actualizarEstado };
+  return { crear, listar, obtener, actualizar };
 })();
 
-
-/* ============================================================
-   SESION — mini-helper de rol, mientras el login "de verdad"
-   no está listo. Convención acordada con el equipo:
-     localStorage.sm_rol     -> "enfermero" | "tecnico" | "admin"
-     localStorage.sm_usuario -> nombre para mostrar (opcional)
-   Cuando el login real esté listo, él es quien debe escribir
-   estos dos valores antes de redirigir a cada panel.
-   ============================================================ */
-const Sesion = (function(){
-  function rolActual(){
-    return localStorage.getItem("sm_rol") || "enfermero"; // valor de prueba mientras no hay login
-  }
-  function usuarioActual(){
-    return localStorage.getItem("sm_usuario") || "Personal de turno";
-  }
-  function cerrarSesion(){
-    localStorage.removeItem("sm_rol");
-    localStorage.removeItem("sm_usuario");
-    window.location.href = "login.html";
+const Sesion = (function () {
+  function rolActual() { return localStorage.getItem("userRol") || "Técnico"; }
+  function usuarioActual() { return localStorage.getItem("userNombre") || "Personal de turno"; }
+  function cerrarSesion() {
+    localStorage.removeItem("userRol");
+    localStorage.removeItem("userNombre");
+    window.location.href = "../index.html";
   }
   return { rolActual, usuarioActual, cerrarSesion };
 })();

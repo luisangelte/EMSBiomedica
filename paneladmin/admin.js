@@ -1,18 +1,29 @@
 // Verifica sesión (mismo esquema que el resto de paneles).
 (function verificarAccesoSeguro() {
     const rolGuardado = localStorage.getItem("userRol");
-    if (!rolGuardado) {
+    if (rolGuardado !== "Admin") {
         alert("Acceso denegado. Por favor, inicia sesión.");
         window.location.href = "../index.html";
     }
 })();
 
 const API_URL = "/api/admin";
+const chartes = {};
+
+async function solicitar(url, opciones) {
+    const respuesta = await fetch(url, opciones);
+    const data = await respuesta.json().catch(() => ({}));
+    if (!respuesta.ok || data.success === false) {
+        throw new Error(data.mensaje || "No se pudo completar la operación.");
+    }
+    return data;
+}
 
 // ==========================================
 // NAVEGACIÓN ENTRE PESTAÑAS
 // ==========================================
 function switchTab(nombre) {
+    pestanaAdminActual = nombre;
     document.querySelectorAll(".tab-content").forEach(sec => sec.classList.remove("active"));
     document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.remove("active"));
 
@@ -24,22 +35,101 @@ function switchTab(nombre) {
     );
     if (boton) boton.classList.add("active");
 
-    // En celular, el menú se abre encima del contenido; ciérralo al elegir.
-    const nav = document.getElementById("nav-admin");
-    if (nav) nav.classList.remove("open");
-
     if (nombre === "dashboard") cargarDashboard();
     if (nombre === "usuarios") obtenerUsuarios();
     if (nombre === "equipos") obtenerEquipos();
+    const nombres = { dashboard: "Datos clínicos y operativos en vivo", usuarios: "Usuarios y roles", equipos: "Equipos médicos", enfermeria: "Central de enfermería", tecnico: "Gestión técnica" };
+    const titulo = document.getElementById("topbar-seccion");
+    if (titulo) titulo.textContent = nombres[nombre] || "Consola administrativa";
 }
+
+function cerrarSesionAdmin() {
+    localStorage.removeItem("userRol");
+    localStorage.removeItem("userNombre");
+    window.location.href = "../index.html";
+}
+
+function toggleProfileMenu() {
+    const menu = document.getElementById("profile-menu");
+    const trigger = document.getElementById("profile-trigger");
+    if (!menu || !trigger) return;
+    const abierto = !menu.hidden;
+    menu.hidden = abierto;
+    trigger.setAttribute("aria-expanded", String(!abierto));
+}
+
+function toggleEditMode() {
+    const activo = document.body.classList.toggle("admin-edit-mode");
+    const label = document.getElementById("edit-mode-label");
+    const badge = document.getElementById("admin-mode");
+    if (label) label.textContent = activo ? "Desactivar modo de gestión" : "Activar modo de gestión";
+    if (badge) badge.textContent = activo ? "Modo gestión activo" : "Modo consulta";
+    aplicarModoGestion(activo);
+    toggleProfileMenu();
+}
+
+function aplicarModoGestion(activo) {
+    document.querySelectorAll("#form-usuario input, #form-usuario select, #form-usuario button").forEach(control => {
+        control.disabled = !activo;
+    });
+    document.querySelectorAll("#tabla-usuarios button[data-management-action]").forEach(control => {
+        control.disabled = !activo;
+    });
+}
+
+function goToCreateUser() {
+    if (!document.body.classList.contains("admin-edit-mode")) toggleEditMode();
+    switchTab("usuarios");
+    if (!document.getElementById("profile-menu").hidden) toggleProfileMenu();
+    const input = document.getElementById("usr-nombre");
+    if (input) setTimeout(() => input.focus(), 0);
+}
+
+function refreshCurrentView() {
+    if (pestanaAdminActual === "dashboard") cargarDashboard();
+    if (pestanaAdminActual === "usuarios") obtenerUsuarios();
+    if (pestanaAdminActual === "equipos") obtenerEquipos();
+    toggleProfileMenu();
+}
+
+function integrarVista(frame, modulo) {
+    try {
+        const documento = frame.contentDocument;
+        if (!documento || documento.getElementById("admin-integrated-style")) return;
+        const estilos = documento.createElement("style");
+        estilos.id = "admin-integrated-style";
+        estilos.textContent = modulo === "enfermeria"
+            ? `html, body { width: 100% !important; margin: 0 !important; padding: 0 !important; background: transparent !important; overflow: visible !important; } #sm-root { min-height: auto !important; background: transparent !important; } #sm-root .sm-header { position: static !important; padding: 12px 0 14px !important; background: transparent !important; border-bottom: 1px solid var(--sm-line-soft) !important; } #sm-root .sm-main { max-width: none !important; padding: 16px 0 30px !important; } #sm-root .sm-grid { gap: 12px !important; } #sm-root .sm-bed { border-radius: 12px !important; padding: 13px !important; }`
+            : `html, body { width: 100% !important; margin: 0 !important; padding: 0 !important; background: transparent !important; } body { padding: 0 !important; } .app-container { max-width: none !important; } .header, .content-card { box-shadow: none !important; }`;
+        documento.head.appendChild(estilos);
+        const ajustarAltura = () => {
+            const altura = Math.max(documento.documentElement.scrollHeight, documento.body?.scrollHeight || 0);
+            frame.style.height = `${altura}px`;
+        };
+        ajustarAltura();
+        window.requestAnimationFrame(ajustarAltura);
+        if (window.ResizeObserver) {
+            const observador = new ResizeObserver(ajustarAltura);
+            observador.observe(documento.documentElement);
+            if (documento.body) observador.observe(documento.body);
+        }
+    } catch (error) {
+        console.warn("No se pudo integrar la vista interna:", error);
+    }
+}
+
+let pestanaAdminActual = "dashboard";
 
 // ==========================================
 // DASHBOARD
 // ==========================================
 async function cargarDashboard() {
     try {
-        const res = await fetch(`${API_URL}/dashboard`);
-        const data = await res.json();
+        const [data, camas, tickets] = await Promise.all([
+            solicitar(`${API_URL}/dashboard`),
+            solicitar("/api/monitoreo"),
+            solicitar("/api/tickets")
+        ]);
         // IDs reales del HTML: kpi-online, kpi-alarmas, kpi-tickets
         const elOnline = document.getElementById("kpi-online");
         const elAlarmas = document.getElementById("kpi-alarmas");
@@ -47,46 +137,69 @@ async function cargarDashboard() {
         if (elOnline) elOnline.textContent = data.camasOnline;
         if (elAlarmas) elAlarmas.textContent = data.camasAlarma;
         if (elTickets) elTickets.textContent = data.ticketsActivos;
-
-        actualizarGraficos(data);
+        renderizarGraficos(camas, tickets);
+        renderizarMonitoreo(camas);
+        const actualizado = document.getElementById("ultima-actualizacion");
+        if (actualizado) actualizado.textContent = `Actualizado ${new Date().toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`;
     } catch (err) {
         console.error("Error cargando métricas del dashboard:", err);
+        document.querySelectorAll("#kpi-online, #kpi-alarmas, #kpi-tickets").forEach(el => el.textContent = "--");
     }
 }
 
-// Alimenta el donut de disponibilidad y las barras del panel visual
-// con los datos reales del backend (no son valores decorativos).
-function actualizarGraficos(data) {
-    const total = data.totalCamas || 0;
-    const online = data.camasOnline || 0;
-    const alarma = data.camasAlarma || 0;
-    const tickets = data.ticketsActivos || 0;
-    const pctOnline = total > 0 ? Math.round((online / total) * 100) : 0;
+function colorEstadoCama(estado) {
+    return { estable: "#34d399", advertencia: "#fbbf24", critico: "#ff3b5c", "sin-conexion": "#7e8b9c" }[estado] || "#7e8b9c";
+}
 
-    const donut = document.getElementById("donut-camas");
-    if (donut) {
-        donut.style.setProperty("--pct", pctOnline);
-        donut.setAttribute("data-label", pctOnline + "%");
-    }
+function etiquetaEstado(estado) {
+    return { estable: "Estable", advertencia: "Advertencia", critico: "Crítica", "sin-conexion": "Sin conexión" }[estado] || estado;
+}
 
-    const barOnline = document.getElementById("bar-online");
-    const barOnlineLabel = document.getElementById("bar-online-label");
-    if (barOnline) barOnline.style.width = pctOnline + "%";
-    if (barOnlineLabel) barOnlineLabel.textContent = `${online} / ${total}`;
+function actualizarGrafico(id, configuracion) {
+    if (!window.Chart) return;
+    const canvas = document.getElementById(id);
+    if (!canvas) return;
+    if (chartes[id]) chartes[id].destroy();
+    chartes[id] = new Chart(canvas, configuracion);
+}
 
-    // Las barras de alarma y tickets se muestran en proporción a un
-    // techo razonable (el total de camas), solo como referencia visual.
-    const barAlarma = document.getElementById("bar-alarma");
-    const barAlarmaLabel = document.getElementById("bar-alarma-label");
-    const pctAlarma = total > 0 ? Math.min(100, Math.round((alarma / total) * 100)) : 0;
-    if (barAlarma) barAlarma.style.width = pctAlarma + "%";
-    if (barAlarmaLabel) barAlarmaLabel.textContent = alarma;
+function renderizarGraficos(camas, tickets) {
+    const estadosCama = ["estable", "advertencia", "critico", "sin-conexion"];
+    const estadosTicket = ["Pendiente", "En Atención", "Resuelto"];
+    const contar = (lista, valor, propiedad = "estado") => lista.filter(item => item[propiedad] === valor).length;
+    const opcionesBase = { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: "#b7c3d4", usePointStyle: true, padding: 18 } } } };
 
-    const barTickets = document.getElementById("bar-tickets");
-    const barTicketsLabel = document.getElementById("bar-tickets-label");
-    const pctTickets = Math.min(100, tickets * 20); // referencia: 5+ tickets = barra llena
-    if (barTickets) barTickets.style.width = pctTickets + "%";
-    if (barTicketsLabel) barTicketsLabel.textContent = tickets;
+    actualizarGrafico("chart-camas", {
+        type: "doughnut",
+        data: { labels: estadosCama.map(etiquetaEstado), datasets: [{ data: estadosCama.map(estado => contar(camas, estado)), backgroundColor: estadosCama.map(colorEstadoCama), borderColor: "#151c26", borderWidth: 4, hoverOffset: 8 }] },
+        options: { ...opcionesBase, cutout: "70%" }
+    });
+    actualizarGrafico("chart-tickets", {
+        type: "bar",
+        data: { labels: estadosTicket.map(etiquetaEstado), datasets: [{ label: "Tickets", data: estadosTicket.map(estado => contar(tickets, estado)), backgroundColor: ["#fbbf24", "#5b8def", "#34d399"], borderRadius: 6, maxBarThickness: 42 }] },
+        options: { ...opcionesBase, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: "#7e8b9c" }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: "#7e8b9c", precision: 0 }, grid: { color: "rgba(126,139,156,.14)" } } } }
+    });
+    const online = camas.filter(cama => cama.estado !== "sin-conexion");
+    const promedio = campo => online.length ? Math.round(online.reduce((suma, cama) => suma + Number(cama[campo] || 0), 0) / online.length) : 0;
+    actualizarGrafico("chart-vitales", {
+        type: "bar",
+        data: { labels: ["Frecuencia cardiaca", "Frecuencia respiratoria"], datasets: [{ label: "Promedio", data: [promedio("fc"), promedio("fr")], backgroundColor: ["#5b8def", "#22d3ee"], borderRadius: 6, maxBarThickness: 52 }] },
+        options: { ...opcionesBase, indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { color: "#7e8b9c", precision: 0 }, grid: { color: "rgba(126,139,156,.14)" } }, y: { ticks: { color: "#b7c3d4" }, grid: { display: false } } } }
+    });
+}
+
+function renderizarMonitoreo(camas) {
+    const tbody = document.getElementById("tabla-monitoreo");
+    if (!tbody) return;
+    tbody.innerHTML = camas.map(cama => `<tr><td><strong>${textoSeguro(cama.nombre)}</strong></td><td>${textoSeguro(cama.paciente)}</td><td><span class="status-pill" style="--status-color:${colorEstadoCama(cama.estado)}">${etiquetaEstado(cama.estado)}</span></td><td class="mono-value">${cama.estado === "sin-conexion" ? "--" : textoSeguro(cama.fc)}</td><td class="mono-value">${cama.estado === "sin-conexion" ? "--" : textoSeguro(cama.fr)}</td></tr>`).join("");
+    const resumen = document.getElementById("resumen-camas");
+    if (resumen) resumen.textContent = `${camas.filter(cama => cama.estado !== "estable").length} requieren atención`;
+}
+
+function textoSeguro(valor) {
+    const contenedor = document.createElement("span");
+    contenedor.textContent = valor ?? "--";
+    return contenedor.innerHTML;
 }
 
 // ==========================================
@@ -94,8 +207,7 @@ function actualizarGraficos(data) {
 // ==========================================
 async function obtenerUsuarios() {
     try {
-        const res = await fetch(`${API_URL}/usuarios`);
-        const usuarios = await res.json();
+        const usuarios = await solicitar(`${API_URL}/usuarios`);
         const tbody = document.getElementById("tabla-usuarios");
         if (!tbody) return;
 
@@ -103,7 +215,7 @@ async function obtenerUsuarios() {
             const esPendiente = u.estado === "Pendiente";
             const colorEstado = esPendiente ? "#ffb703" : "#4ad66d";
             const botonAccion = esPendiente
-                ? `<button style="background:#4ad66d; color:#090f1d; padding:6px 12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="autorizarRegistro(${u.id})">Aprobar</button>`
+                ? `<button data-management-action style="background:#4ad66d; color:#090f1d; padding:6px 12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer;" onclick="autorizarRegistro(${u.id})">Aprobar</button>`
                 : `<button style="background:#334155; color:#94a3b8; padding:6px 12px; border:none; border-radius:4px; cursor:default;" disabled>Activo</button>`;
 
             return `
@@ -116,20 +228,25 @@ async function obtenerUsuarios() {
                 </tr>
             `;
         }).join("");
-    } catch (err) { console.error("Error cargando usuarios:", err); }
+    } catch (err) {
+        console.error("Error cargando usuarios:", err);
+        mostrarErrorTabla("tabla-usuarios", "No se pudieron cargar los usuarios.", 5);
+    }
 }
 
 async function autorizarRegistro(id) {
     try {
-        const res = await fetch(`${API_URL}/usuarios/aprobar`, {
+        const data = await solicitar(`${API_URL}/usuarios/aprobar`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id })
         });
-        const data = await res.json();
-        if (res.ok) { obtenerUsuarios(); }
-        else { alert(data.mensaje); }
-    } catch (err) { console.error("Error al autorizar:", err); }
+        alert(data.mensaje || "Acceso activado correctamente.");
+        obtenerUsuarios();
+    } catch (err) {
+        console.error("Error al autorizar:", err);
+        alert(err.message);
+    }
 }
 
 async function agregarNuevoUsuario(event) {
@@ -139,19 +256,18 @@ async function agregarNuevoUsuario(event) {
     if (!nombre || !rol) return;
 
     try {
-        const res = await fetch(`${API_URL}/usuarios`, {
+        const data = await solicitar(`${API_URL}/usuarios`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre, rol })
         });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            document.getElementById("form-usuario").reset();
-            obtenerUsuarios();
-        } else {
-            alert(data.mensaje || "No se pudo registrar el usuario.");
-        }
-    } catch (err) { console.error("Error registrando usuario:", err); }
+        document.getElementById("form-usuario").reset();
+        alert(`Usuario creado: ${data.usuario.usuario}`);
+        obtenerUsuarios();
+    } catch (err) {
+        console.error("Error registrando usuario:", err);
+        alert(err.message || "No se pudo registrar el usuario.");
+    }
 }
 
 // ==========================================
@@ -159,8 +275,7 @@ async function agregarNuevoUsuario(event) {
 // ==========================================
 async function obtenerEquipos() {
     try {
-        const res = await fetch(`${API_URL}/equipos`);
-        const equipos = await res.json();
+        const equipos = await solicitar(`${API_URL}/equipos`);
         const tbody = document.getElementById("tabla-equipos");
         if (!tbody) return;
 
@@ -173,14 +288,38 @@ async function obtenerEquipos() {
                 <td>${e.mantenimiento}</td>
             </tr>
         `).join("");
-    } catch (err) { console.error("Error cargando equipos:", err); }
+    } catch (err) {
+        console.error("Error cargando equipos:", err);
+        mostrarErrorTabla("tabla-equipos", "No se pudo cargar el inventario.", 5);
+    }
+}
+
+function mostrarErrorTabla(id, mensaje, columnas) {
+    const tbody = document.getElementById(id);
+    if (tbody) tbody.innerHTML = `<tr><td colspan="${columnas}">${mensaje}</td></tr>`;
 }
 
 // ==========================================
 // INICIALIZADOR
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
+    const nombre = localStorage.getItem("userNombre") || "Administrador";
+    const rol = localStorage.getItem("userRol") || "Admin";
+    document.getElementById("profile-name").textContent = nombre;
+    document.getElementById("menu-user-name").textContent = nombre;
+    document.getElementById("profile-role").textContent = rol + " del sistema";
+    document.getElementById("profile-avatar").textContent = nombre.split(/\s+/).map(parte => parte[0]).join("").slice(0, 2).toUpperCase();
+    aplicarModoGestion(false);
     cargarDashboard();
     obtenerUsuarios();
     obtenerEquipos();
+    setInterval(cargarDashboard, 5000);
+    document.addEventListener("click", event => {
+        const menu = document.getElementById("profile-menu");
+        const contenedor = document.querySelector(".profile-menu-wrap");
+        if (menu && contenedor && !contenedor.contains(event.target)) {
+            menu.hidden = true;
+            document.getElementById("profile-trigger")?.setAttribute("aria-expanded", "false");
+        }
+    });
 });

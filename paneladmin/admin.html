@@ -3,85 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIMEB / EMS - Administración General</title>
+    <title>SIMEB - Administración General</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
     <div class="admin-container">
         <!-- Barra Lateral -->
         <aside class="sidebar">
-            <h2>SIMEB Admin</h2>
-            <button class="menu-toggle" onclick="document.getElementById('nav-admin').classList.toggle('open')">☰</button>
-            <nav id="nav-admin">
-                <div class="profile-info">Panel de Gestión</div>
-                <button class="nav-btn active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-                <button class="nav-btn" onclick="switchTab('usuarios')">👥 Usuarios y Roles</button>
-                <button class="nav-btn" onclick="switchTab('equipos')">🩺 Equipos Médicos</button>
-                <a href="../RolEnfermero/monitor.html" class="nav-btn external">📺 Volver a Central</a>
+            <h2>SIMEB</h2>
+            <div class="profile-info">Panel de Gestión</div>
+            <nav>
+                <button class="nav-btn active" onclick="switchTab('dashboard')">Datos en vivo</button>
+                <button class="nav-btn" onclick="switchTab('usuarios')">Usuarios y roles</button>
+                <button class="nav-btn" onclick="switchTab('equipos')">Equipos médicos</button>
+                <button class="nav-btn" onclick="switchTab('enfermeria')">Central de enfermería</button>
+                <button class="nav-btn" onclick="switchTab('tecnico')">Gestión técnica</button>
+                <button class="nav-btn nav-logout" onclick="cerrarSesionAdmin()">Cerrar sesión</button>
             </nav>
         </aside>
 
         <!-- Contenido Principal -->
         <main class="main-content">
-
-            <!-- PESTAÑA 1: DASHBOARD -->
-            <section id="tab-dashboard" class="tab-content active">
-                <h1>Dashboard Institucional</h1>
-                <div class="kpi-grid">
-                    <div class="kpi-card">
-                        <div class="kpi-icon">🖥️</div>
-                        <h3>Monitores Activos</h3>
-                        <p id="kpi-online">--</p>
-                    </div>
-                    <div class="kpi-card danger">
-                        <div class="kpi-icon">🚨</div>
-                        <h3>Alarmas Críticas</h3>
-                        <p id="kpi-alarmas">--</p>
-                    </div>
-                    <div class="kpi-card warning">
-                        <div class="kpi-icon">🎫</div>
-                        <h3>Tickets Pendientes</h3>
-                        <p id="kpi-tickets">--</p>
+            <header class="admin-topbar">
+                <div class="topbar-context">
+                    <span class="eyebrow">Administración central</span>
+                    <strong id="topbar-seccion">Datos clínicos y operativos en vivo</strong>
+                </div>
+                <span class="mode-badge" id="admin-mode">Modo consulta</span>
+                <div class="profile-menu-wrap">
+                    <button class="profile-trigger" id="profile-trigger" type="button" aria-expanded="false" aria-controls="profile-menu" onclick="toggleProfileMenu()">
+                        <span class="profile-avatar" id="profile-avatar">LA</span>
+                        <span class="profile-copy"><strong id="profile-name">Administrador</strong><small id="profile-role">Administrador del sistema</small></span>
+                        <span class="profile-chevron" aria-hidden="true">⌄</span>
+                    </button>
+                    <div class="profile-menu" id="profile-menu" hidden>
+                        <div class="menu-heading"><span id="menu-user-name">Administrador</span><small>Sesión activa</small></div>
+                        <button type="button" onclick="toggleEditMode()"><span class="menu-icon">✎</span><span><strong id="edit-mode-label">Activar modo de gestión</strong><small>Controles administrativos disponibles</small></span></button>
+                        <button type="button" onclick="goToCreateUser()"><span class="menu-icon">＋</span><span><strong>Crear usuario</strong><small>Asignar un nuevo acceso</small></span></button>
+                        <button type="button" onclick="refreshCurrentView()"><span class="menu-icon">↻</span><span><strong>Actualizar información</strong><small>Consultar datos del servidor</small></span></button>
+                        <div class="menu-divider"></div>
+                        <button type="button" class="menu-danger" onclick="cerrarSesionAdmin()"><span class="menu-icon">⎋</span><span><strong>Cerrar sesión</strong><small>Salir de la consola</small></span></button>
                     </div>
                 </div>
-
-                <div class="chart-row">
-                    <div class="chart-box">
-                        <h3>Disponibilidad de camas</h3>
-                        <div class="chart-sub">Equipos en línea vs. total registrado</div>
-                        <div class="donut-wrap">
-                            <div class="donut" id="donut-camas" style="--pct:0" data-label="0%"></div>
-                            <div class="donut-legend">
-                                <span><i class="dot ok"></i>En línea</span>
-                                <span><i class="dot off"></i>Fuera de línea</span>
-                            </div>
-                        </div>
+            </header>
+            
+            <!-- PESTAÑA 1: DASHBOARD -->
+            <section id="tab-dashboard" class="tab-content active">
+                <div class="section-heading">
+                    <div>
+                        <span class="eyebrow">Centro de control</span>
+                        <h1>Datos clínicos y operativos en vivo</h1>
+                        <p class="section-intro">Supervisión consolidada de equipos, alarmas y mantenimiento.</p>
                     </div>
-                    <div class="chart-box">
-                        <h3>Análisis Operativo Biomédico</h3>
-                        <div class="chart-sub">Filtrado inteligente de falsas alarmas del Caso 2 (electrodo ECG suelto)</div>
-                        <div class="bars-list">
-                            <div class="bar-item">
-                                <div class="bar-label"><span>Camas en línea</span><b id="bar-online-label">0 / 0</b></div>
-                                <div class="bar-track"><div class="bar-fill" id="bar-online"></div></div>
-                            </div>
-                            <div class="bar-item">
-                                <div class="bar-label"><span>Camas con alarma activa</span><b id="bar-alarma-label">0</b></div>
-                                <div class="bar-track"><div class="bar-fill danger" id="bar-alarma"></div></div>
-                            </div>
-                            <div class="bar-item">
-                                <div class="bar-label"><span>Tickets pendientes</span><b id="bar-tickets-label">0</b></div>
-                                <div class="bar-track"><div class="bar-fill warning" id="bar-tickets"></div></div>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="dashboard-meta"><span class="live-dot"></span><span id="ultima-actualizacion">Actualizando datos...</span></div>
+                </div>
+                <div class="kpi-grid">
+                    <div class="kpi-card"><h3>Monitores Activos</h3><p id="kpi-online">--</p></div>
+                    <div class="kpi-card danger"><h3>Alarmas Críticas</h3><p id="kpi-alarmas">--</p></div>
+                    <div class="kpi-card warning"><h3>Tickets Pendientes</h3><p id="kpi-tickets">--</p></div>
+                </div>
+                <div class="charts-grid">
+                    <article class="chart-box chart-wide">
+                        <div class="panel-heading"><div><span class="eyebrow">Monitoreo clínico</span><h2>Estado de camas</h2></div><span class="panel-tag">En vivo</span></div>
+                        <div class="chart-canvas chart-doughnut"><canvas id="chart-camas" aria-label="Distribución del estado de las camas"></canvas></div>
+                    </article>
+                    <article class="chart-box">
+                        <div class="panel-heading"><div><span class="eyebrow">Mantenimiento</span><h2>Estado de tickets</h2></div></div>
+                        <div class="chart-canvas"><canvas id="chart-tickets" aria-label="Distribución del estado de los tickets"></canvas></div>
+                    </article>
+                    <article class="chart-box">
+                        <div class="panel-heading"><div><span class="eyebrow">Signos vitales</span><h2>Promedios actuales</h2></div></div>
+                        <div class="chart-canvas"><canvas id="chart-vitales" aria-label="Promedios actuales de frecuencia cardiaca y respiratoria"></canvas></div>
+                    </article>
+                </div>
+                <div class="activity-panel">
+                    <div class="panel-heading"><div><span class="eyebrow">Seguimiento operativo</span><h2>Equipos bajo observación</h2></div><span id="resumen-camas" class="panel-tag">--</span></div>
+                    <div class="admin-table-wrap"><table class="admin-table activity-table"><thead><tr><th>Cama</th><th>Paciente</th><th>Estado</th><th>FC</th><th>FR</th></tr></thead><tbody id="tabla-monitoreo"></tbody></table></div>
                 </div>
             </section>
 
             <!-- PESTAÑA 2: CONTROL DE USUARIOS Y ROLES -->
             <section id="tab-usuarios" class="tab-content">
                 <h1>Gestión de Personal de Salud y Soporte</h1>
-
+                
                 <!-- Formulario para agregar usuario -->
                 <div class="form-container">
                     <h3>Registrar Nuevo Integrante</h3>
@@ -93,35 +100,42 @@
                             <option value="Admin">Admin (Control Total)</option>
                             <option value="Técnico">Técnico (Mantenimiento Biomédico)</option>
                         </select>
-                        <button type="submit" class="btn-primary">Asignar Acceso</button>
+                        <button type="submit" class="btn-primary">Crear acceso</button>
                     </form>
                 </div>
 
-                <div class="table-wrap">
-                    <table class="admin-table">
-                        <thead>
-                            <tr><th>ID Acceso</th><th>Nombre</th><th>Rol de Sistema</th><th>Estado</th><th>Acciones</th></tr>
-                        </thead>
-                        <tbody id="tabla-usuarios"></tbody>
-                    </table>
-                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>ID Acceso</th><th>Nombre</th><th>Rol de Sistema</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody id="tabla-usuarios"></tbody>
+                </table>
             </section>
 
             <!-- PESTAÑA 3: INVENTARIO EQUIPOS -->
             <section id="tab-equipos" class="tab-content">
                 <h1>Inventario de Equipos Críticos</h1>
-                <div class="table-wrap">
-                    <table class="admin-table">
-                        <thead>
-                            <tr><th>Código</th><th>Modelo de Monitor</th><th>Número de Serie</th><th>Sala Asignada</th><th>Próxima Calibración</th></tr>
-                        </thead>
-                        <tbody id="tabla-equipos"></tbody>
-                    </table>
-                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Código</th><th>Modelo de Monitor</th><th>Número de Serie</th><th>Sala Asignada</th><th>Próxima Calibración</th></tr>
+                    </thead>
+                    <tbody id="tabla-equipos"></tbody>
+                </table>
+            </section>
+
+            <section id="tab-enfermeria" class="tab-content embedded-view">
+                <div class="section-heading"><div><span class="eyebrow">Módulo clínico</span><h1>Central de Enfermería</h1><p class="section-intro">Consulta y gestión de alarmas de los equipos conectados.</p></div><span class="panel-tag">Vista integrada</span></div>
+                <div class="embedded-frame embedded-nurse"><iframe title="Central de monitoreo de enfermería" src="../RolEnfermero/monitor.html" onload="integrarVista(this, 'enfermeria')"></iframe></div>
+            </section>
+
+            <section id="tab-tecnico" class="tab-content embedded-view">
+                <div class="section-heading"><div><span class="eyebrow">Mantenimiento biomédico</span><h1>Gestor Técnico</h1><p class="section-intro">Seguimiento, actualización y cierre de tickets operativos.</p></div><span class="panel-tag">Vista integrada</span></div>
+                <div class="embedded-frame embedded-tech"><iframe title="Gestor técnico biomédico" src="../gestor_tickes/index.html" onload="integrarVista(this, 'tecnico')"></iframe></div>
             </section>
 
         </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="admin.js"></script>
 </body>
 </html>
